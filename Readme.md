@@ -22,7 +22,7 @@ pkgfiles('./src', function(err, files, packages) {
   // files: Array of absolute paths to files and dirs that would be included
   // packages: Array of package.jsons that would be included
 
-  console.log(files)
+  console.log(files.join('\n'))
   // /Users/timoxley/Projects/pkgfiles/package.json
   // /Users/timoxley/Projects/pkgfiles/.npmignore
   // /Users/timoxley/Projects/pkgfiles/index.js
