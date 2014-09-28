@@ -1,5 +1,7 @@
 # pkgfiles
 
+[![Build Status](https://travis-ci.org/timoxley/pkgfiles.svg)](https://travis-ci.org/timoxley/pkgfiles)
+
 List all files which would be published in a package.
 
 Useful for double-checking you're not publishing anything
