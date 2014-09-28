@@ -17,7 +17,7 @@ npm install pkgfiles
 var pkgfiles = require('pkgfiles')
 
 pkgfiles('./src', function(err, files, packages) {
-  // files: Array of files and dirs that would be included
+  // files: Array of absolute paths to files and dirs that would be included
   // packages: Array of package.jsons that would be included
 })
 ```
@@ -26,15 +26,15 @@ pkgfiles('./src', function(err, files, packages) {
 
 ```
 > pkgfiles
-/Users/timoxley/Projects/pkgfiles/package.json
-/Users/timoxley/Projects/pkgfiles/.npmignore
-/Users/timoxley/Projects/pkgfiles/index.js
-/Users/timoxley/Projects/pkgfiles/Readme.md
-/Users/timoxley/Projects/pkgfiles/bin/pkgfiles.js
-/Users/timoxley/Projects/pkgfiles/test/index.js
-/Users/timoxley/Projects/pkgfiles/test/pkg/package.json
-/Users/timoxley/Projects/pkgfiles/test/pkg/index.js
-/Users/timoxley/Projects/pkgfiles/test/pkg/lib/index.js
+package.json
+.npmignore
+index.js
+Readme.md
+bin/pkgfiles.js
+test/index.js
+test/pkg/package.json
+test/pkg/index.js
+test/pkg/lib/index.js
 Total 9 files
 >
 ```
