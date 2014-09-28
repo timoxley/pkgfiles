@@ -3,7 +3,7 @@
 var path = require('path')
 var resolve = require('pkgresolve')
 
-module.exports = function(src, fn) {
+module.exports = function pkgfiles(src, fn) {
   resolve('fstream-npm').fromGlobal('npm', function(err, fstreamPath) {
     if (err) return fn(err)
     var entries = []

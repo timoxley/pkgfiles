@@ -1,7 +1,9 @@
 # pkgfiles
 
-List all files which would be included by npm if this package was
-published as-is.
+List all files which would be published in a package.
+
+Useful for double-checking you're not publishing anything
+unwanted prior to an `npm publish`.
 
 Note some files may not yet exist (e.g. `.npmignore`).
 
@@ -26,6 +28,7 @@ pkgfiles('./src', function(err, files, packages) {
 
 ```
 > pkgfiles
+
 package.json
 .npmignore
 index.js
@@ -35,6 +38,7 @@ test/index.js
 test/pkg/package.json
 test/pkg/index.js
 test/pkg/lib/index.js
+
 Total 9 files
 >
 ```
