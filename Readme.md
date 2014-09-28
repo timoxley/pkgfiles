@@ -1,8 +1,8 @@
 # pkgfiles
 
-[![Build Status](https://travis-ci.org/timoxley/pkgfiles.svg)](https://travis-ci.org/timoxley/pkgfiles)
+### List all files which would be published in a package.
 
-List all files which would be published in a package.
+[![Build Status](https://travis-ci.org/timoxley/pkgfiles.svg)](https://travis-ci.org/timoxley/pkgfiles)
 
 Useful for double-checking you're not publishing anything
 unwanted prior to an `npm publish`.
