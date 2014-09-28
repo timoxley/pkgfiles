@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "description": "List all files which would be published in a package.",
   "main": "index.js",
-  "bin": "bin/pkgfiles.js",
+  "bin": {
+    "pkgfiles": "bin/pkgfiles.js"
+  },
   "scripts": {
     "test": "tape test/*.js"
   },
@@ -11,10 +13,11 @@
     "npm",
     "publish",
     "dependencies",
+    "files",
     "package"
   ],
   "author": "Tim Oxley <secoif@gmail.com>",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "fstream-npm": "~1.0.0",
     "minimist": "~1.1.0",
@@ -22,5 +25,16 @@
   },
   "devDependencies": {
     "tape": "~3.0.0"
-  }
+  },
+  "directories": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/timoxley/pkgfiles.git"
+  },
+  "bugs": {
+    "url": "https://github.com/timoxley/pkgfiles/issues"
+  },
+  "homepage": "https://github.com/timoxley/pkgfiles"
 }
