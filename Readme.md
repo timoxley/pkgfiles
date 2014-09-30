@@ -64,6 +64,10 @@ the global `npm`. It has an async callback interface (instead of a
 stream), and keeps the original path (instead of nesting paths in
 'package').
 
+## See Also
+
+* [thlorenz/irish-pub](https://www.npmjs.org/package/irish-pub)
+
 # License
 
 MIT
