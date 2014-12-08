@@ -86,7 +86,16 @@ pkgFiles.summary(dir, function(err, result) {
   })
   .sort(sortBy(argv.sort))
 
-  console.info(columnify(result.entries, {columnSplitter: '  ', columns: ['file', 'size', 'percent', 'diskSize', 'percentDisk'], headingTransform: function(header) {
+  var columns = ['file', 'size', 'percent',]
+  if (argv.disk) {
+    columns.push('diskSize', 'percentDisk')
+  } else {
+    summary = summary.filter(function(item) {
+      return !(/Disk/.test(item.key))
+    })
+  }
+
+  console.info(columnify(result.entries, {columnSplitter: '  ', columns: columns, headingTransform: function(header) {
     if (header === 'percent') return '%'
     if (header === 'diskSize') return 'DISK SIZE'
     if (header === 'percentDisk') return 'DISK SIZE %'
