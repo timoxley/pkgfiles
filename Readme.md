@@ -20,6 +20,28 @@ npm install pkgfiles
 ```
 > pkgfiles
 
+FILE                   SIZE     %
+test/pkg/lib/index.js  0 B      0%
+test/pkg/index.js      0 B      0%
+.npmignore             N/A
+.travis.yml            84 B     1%
+test/pkg/package.json  269 B    2%
+test/index.js          739 B    6%
+package.json           900 B    7%
+LICENSE                1.08 kB  9%
+index.js               2.99 kB  24%
+Readme.md              3.12 kB  25%
+bin/pkgfiles.js        3.43 kB  27%
+
+PKGFILES SUMMARY
+Size with Dependencies  ~885.15 kB
+Publishable Size        ~12.61 kB
+Number of Files         11
+```
+
+```
+> pkgfiles --disk
+
 FILE                   SIZE     %    DISK SIZE  DISK SIZE %
 test/pkg/lib/index.js  0 B      0%   0 B        0%
 test/pkg/index.js      0 B      0%   0 B        0%
@@ -39,7 +61,28 @@ Size with Dependencies          ~865.27 kB
 Publishable Size on Disk        ~32.77 kB
 Publishable Size                ~11.47 kB
 Number of Files                 11
->
+```
+
+```
+> pkgfiles --sort=name
+
+FILE                   SIZE     %
+.npmignore             N/A
+.travis.yml            84 B     1%
+LICENSE                1.08 kB  8%
+Readme.md              4.24 kB  31%
+bin/pkgfiles.js        3.5 kB   25%
+index.js               2.99 kB  22%
+package.json           900 B    7%
+test/index.js          739 B    5%
+test/pkg/index.js      0 B      0%
+test/pkg/lib/index.js  0 B      0%
+test/pkg/package.json  269 B    2%
+
+PKGFILES SUMMARY
+Size with Dependencies  ~886.34 kB
+Publishable Size        ~13.8 kB
+Number of Files         11
 ```
 
 ## API

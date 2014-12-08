@@ -17,14 +17,14 @@ if (argv.help) {
 
 function usage() {
   console.error('')
-  console.error('Usage: pkgfiles [--sort=size|name|pkgfiles] [--json] [dir]')
+  console.error('Usage: pkgfiles [--sort=size|name|pkgfiles] [--disk] [--json] [dir]')
   console.error('')
-  console.error('  pkgfiles                 # List all files which would be published in current directory.')
-  console.error('  pkgfiles ./mypkg         # List all files which would be published in `./mypkg`.')
-  console.error('  pkgfiles --json          # Render JSON output')
-  console.error('  pkgfiles --sort=size     # Sort files by size [default]')
-  console.error('  pkgfiles --sort=name     # Sort files by name')
-  console.error('  pkgfiles --sort=diskSize # Sort files by size on disk')
+  console.error('  pkgfiles                # List all files which would be published in current directory.')
+  console.error('  pkgfiles ./mypkg        # List all files which would be published in `./mypkg`.')
+  console.error('  pkgfiles --json         # Render JSON output')
+  console.error('  pkgfiles --sort=size    # Sort files by size [default]')
+  console.error('  pkgfiles --sort=name    # Sort files by name')
+  console.error('  pkgfiles --disk         # Include disk sizes in result')
   console.error('')
 }
 
