@@ -29,6 +29,7 @@ function usage() {
 }
 
 argv.sort = argv.sort || 'size'
+if (argv.sort === 'name') argv.sort = 'file'
 
 pkgFiles.summary(dir, function(err, result) {
   console.error()
@@ -83,6 +84,7 @@ pkgFiles.summary(dir, function(err, result) {
     entry.diskSize = bytes(entry.diskSize)
     return entry
   })
+  .sort(sortBy(argv.sort))
 
   console.info(columnify(result.entries, {columnSplitter: '  ', columns: ['file', 'size', 'percent', 'diskSize', 'percentDisk'], headingTransform: function(header) {
     if (header === 'percent') return '%'
@@ -109,7 +111,7 @@ function error(err) {
 
 function sortBy(key) {
   return function(a, b) {
-    if (typeof a[key] === 'String') {
+    if (typeof a[key] === 'string') {
       return a[key].localeCompare(b[key])
     } else {
       return a[key] - b[key]
