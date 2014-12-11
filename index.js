@@ -4,15 +4,16 @@ var fs = require('fs')
 var path = require('path')
 var resolve = require('pkgresolve')
 var du = require('du')
+var map = require('map-limit')
 
 module.exports = pkgFiles
 
-function pkgFiles(src, fn) {
+function pkgFiles(dir, fn) {
   resolve('fstream-npm').fromGlobal('npm', function(err, fstreamPath) {
     if (err) return fn(err)
     var files = []
     var packages = []
-    var nest = path.join(path.dirname(src), 'package')
+    var nest = path.join(path.dirname(dir), 'package')
     if (!fstreamPath) {
       console.error('Warning: Could not find fstream-npm in global npm.')
       console.error('You may not see matching behaviour.')
@@ -20,7 +21,7 @@ function pkgFiles(src, fn) {
     fstreamPath = fstreamPath || 'fstream-npm'
 
     var fstream = require(fstreamPath)
-    fstream({ path: src })
+    fstream({ path: dir })
     .on('entry', function(entry) {
       files.push(entry.path)
     })
@@ -34,45 +35,93 @@ function pkgFiles(src, fn) {
     .on('end', function() {
 
       files = files.map(function(file) {
-        return path.join(src, path.relative(nest, file))
+        return path.join(dir, path.relative(nest, file))
       })
 
-      var pending = files.length
-      files.forEach(function(file) {
+      map(files, Infinity, function(file, next) {
         fs.lstat(file, function(err, stat) {
+          var name = path.relative(dir, file)
           if (err) {
-            if (err.code === 'ENOENT') return done(null, {
-              file: file,
+            if (err.code === 'ENOENT') return next(null, {
+              name: name,
               size: 0,
               diskSize: 0,
               exists: false
             })
-            return done(err)
+            return next(err)
           }
-
-          if (stat.isDirectory()) return done(null, {
-            file: file,
-            size: 0,
-            diskSize: 0,
-            exists: true
-          })
-
-          return done(null, {
-            file: file,
+          return next(null, {
+            name: name,
             size: stat.size,
             diskSize: 512 * stat.blocks,
-            exists: true
+            exists: true,
+            isDirectory: false
           })
         })
-      })
-      var results = []
-      function done(err, entry) {
+      }, function(err, entries) {
         if (err) return fn(err)
-        results = results.concat(entry)
-        if (!--pending) fn(null, results, packages)
-      }
+        var dirNames = entries
+        .reduce(function(dirNames, entry) {
+          return dirNames.concat(getAncestors(entry.name))
+        }, [])
+        .filter(Boolean)
+        .filter(unique)
+
+        var dirEntries = dirNames.map(function(dirName) {
+          return {
+            name: dirName,
+            size: 0,
+            diskSize: 0,
+            exists: true,
+            children: [],
+            isDirectory: true
+          }
+        })
+
+        dirEntries.forEach(function(dirEntry) {
+          dirEntry.children = dirEntry.children
+          .concat(entries.filter(function(entry) {
+            return (
+              dirEntry.name !== entry.name &&
+              !path.relative(dirEntry.name, path.dirname(entry.name))
+            )
+          }))
+        })
+
+        dirEntries.forEach(function(dirEntry) {
+          dirEntry.children = dirEntry.children
+          .concat(dirEntries.filter(function(entry) {
+            return (
+              dirEntry.name !== entry.name &&
+              !path.relative(dirEntry.name, path.dirname(entry.name))
+            )
+          }))
+        })
+
+        dirEntries.forEach(function(dirEntry) {
+          dirEntry.children = dirEntry.children.filter(unique)
+        })
+        var rootDir = dirEntries.filter(function(dirEntry) {
+          return dirEntry.name === '.'
+        }).pop()
+        getDirSize(rootDir)
+        return fn(null, entries.concat(dirEntries), packages)
+      })
     })
   })
+}
+
+function getDirSize(dirEntry) {
+  return dirEntry.children.reduce(function(dirEntry, entry) {
+    if (entry.isDirectory) {
+      entry = getDirSize(entry)
+    }
+    dirEntry.size += entry.size
+    dirEntry.diskSize += entry.diskSize
+    return dirEntry
+  }, dirEntry)
+  dirEntry.children = []
+  return dirEntry
 }
 
 pkgFiles.summary = function summary(dir, done) {
@@ -84,36 +133,68 @@ pkgFiles.summary = function summary(dir, done) {
   var result = {
     packages: [],
     entries: [],
-    extractedSize: 0,
-    extractedDiskSize: 0,
+    sizeWithDependencies: 0,
+    diskSizeWithDependencies: 0,
     publishSize: 0,
     publishDiskSize: 0
   }
 
-  var pending = 3
+  var pending = 2
 
   pkgFiles(dir, function(err, entries, packages) {
     if (err) return fn(err)
     result.packages = packages
-    result.publishSize = entries.reduce(function(t, entry) {
+    var files = entries.filter(function(entry) {
+      return !entry.isDirectory
+    })
+    result.publishSize = files.reduce(function(t, entry) {
       return t + (entry.size || 0)
     }, 0)
-    result.publishDiskSize = entries.reduce(function(t, entry) {
+    result.publishDiskSize = files.reduce(function(t, entry) {
       return t + (entry.diskSize || 0)
     }, 0)
     result.entries = entries || []
     if (!--pending) return fn(null, result)
   })
 
-  du(dir, {disk: true}, function(err, extractedDiskSize) {
+  duSizes(dir, function(err, dir) {
+    result.diskSizeWithDependencies = dir.diskSize
+    result.sizeWithDependencies = dir.size
+    if (!--pending) return fn(null, result)
+  })
+}
+
+function duSizes(dir, fn) {
+  var result = {dir: dir}
+  var pending = 2
+  du(dir, {disk: true}, function(err, diskSize) {
     if (err) return fn(err)
-    result.extractedDiskSize = extractedDiskSize || 0
+    result.diskSize = diskSize || 0
     if (!--pending) return fn(null, result)
   })
 
-  du(dir, function(err, extractedSize) {
+  du(dir, function(err, size) {
     if (err) return fn(err)
-    result.extractedSize = extractedSize || 0
+    result.size = size || 0
     if (!--pending) return fn(null, result)
   })
+}
+
+function getAncestors(dirName) {
+  var dirNames = []
+  dirName = path.dirname(dirName)
+  while (dirName && dirName !== '/' && dirName !== '.') {
+    dirNames.push(dirName)
+    dirName = path.dirname(dirName)
+  }
+  if (dirName === '.') dirNames.push(dirName)
+  return dirNames
+}
+
+function unique(item, index, arr) {
+  return index === arr.lastIndexOf(item)
+}
+
+function dirContains(parent, child) {
+  return parent !== child && path.relative(parent, child).slice(0, 2) !== '..'
 }

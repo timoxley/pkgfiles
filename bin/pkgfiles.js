@@ -4,10 +4,22 @@
 
 var pkgFiles = require('../')
 var path = require('path')
-var argv = require('minimist')(process.argv.slice(2))
+var minimist = require('minimist')
 var columnify = require('columnify')
 var bytes = require('pretty-bytes')
 
+var argv = minimist(process.argv.slice(2), {
+  alias: {
+    'd': 'dirs',
+    'D': 'only-dirs',
+    'f': 'files'
+  },
+  default: {
+    files: true,
+    dirs: true
+  },
+  boolean: ['dirs', 'files']
+})
 var dir = argv._[0] || process.cwd()
 
 if (argv.help) {
@@ -29,21 +41,43 @@ function usage() {
 }
 
 argv.sort = argv.sort || 'size'
-if (argv.sort === 'name') argv.sort = 'file'
+
+if (argv['only-dirs']) {
+  argv.dirs = true
+  argv.files = false
+}
 
 pkgFiles.summary(dir, function(err, result) {
   console.error()
   if (err) return error(err)
-  result.entries = result.entries.sort(sortBy(argv.sort))
+
+  var entries = result.entries
+  var files = entries.filter(function(e) {
+    return !e.isDirectory
+  })
+  var dirs = entries.filter(function(e) {
+    return e.isDirectory
+  })
+
+  if (!argv['dirs']) entries = files
+  if (!argv['files']) entries = dirs
+
+  entries = result.entries = entries.sort(sortBy(argv.sort))
+
   if (argv.json) {
     return console.info(JSON.stringify(result, null, 2))
   }
-  var total = result.entries.length
 
+  var total = files.length
   var summary = [
     {
       key: 'total',
       title: 'Number of Files',
+      value: total
+    },
+    {
+      key: 'total',
+      title: 'Number of Directories',
       value: total
     },
     {
@@ -57,20 +91,19 @@ pkgFiles.summary(dir, function(err, result) {
       value: "~" + bytes(result.publishDiskSize)
     },
     {
-      key: 'extractedSize',
+      key: 'sizeWithDependencies',
       title: 'Size with Dependencies',
-      value: "~" + bytes(result.extractedSize)
+      value: "~" + bytes(result.sizeWithDependencies)
     },
     {
-      key: 'extractedDiskSize',
+      key: 'diskSizeWithDependencies',
       title: 'Size on Disk with Dependencies',
-      value: "~" + bytes(result.extractedDiskSize)
+      value: "~" + bytes(result.diskSizeWithDependencies)
     }
   ].reverse()
 
-  var entries = result.entries
-  .map(function(entry) {
-    entry.file = path.relative(dir, entry.file)
+  entries = entries.map(function(entry) {
+    entry.name = path.relative(dir, entry.name)
     if (!entry.exists) {
       entry.percent = ''
       entry.percentDisk = ''
@@ -78,6 +111,10 @@ pkgFiles.summary(dir, function(err, result) {
       entry.diskSize = ''
       return entry
     }
+
+    if (entry.isDirectory) entry.name += '/'
+    if (entry.name === '/') entry.name = '.'
+
     entry.percent = percent(entry.size/result.publishSize)
     entry.percentDisk = percent(entry.diskSize/result.publishDiskSize)
     entry.size = bytes(entry.size)
@@ -86,7 +123,7 @@ pkgFiles.summary(dir, function(err, result) {
   })
   .sort(sortBy(argv.sort))
 
-  var columns = ['file', 'size', 'percent',]
+  var columns = ['name', 'size', 'percent',]
   if (argv.disk) {
     columns.push('diskSize', 'percentDisk')
   } else {
@@ -94,8 +131,19 @@ pkgFiles.summary(dir, function(err, result) {
       return !(/Disk/.test(item.key))
     })
   }
+  var breaker = {
+    name: 'DIR',
+    size: 'SIZE',
+    percent: '%',
+    diskSize: 'DISK SIZE',
+    diskSizePercent: 'DISK SIZE %'
+  }
 
-  console.info(columnify(result.entries, {columnSplitter: '  ', columns: columns, headingTransform: function(header) {
+  var rows = files
+  if (argv.dirs) rows = rows.concat({}, breaker).concat(dirs)
+
+  console.info(columnify(rows, {columnSplitter: '  ', columns: columns, headingTransform: function(header) {
+    if (header === 'name') return 'PATH'
     if (header === 'percent') return '%'
     if (header === 'diskSize') return 'DISK SIZE'
     if (header === 'percentDisk') return 'DISK SIZE %'
