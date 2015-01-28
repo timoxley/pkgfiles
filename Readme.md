@@ -137,6 +137,8 @@ stream), and keeps the original path (instead of nesting paths in
 ## See Also
 
 * [thlorenz/irish-pub](https://www.npmjs.org/package/irish-pub)
+* [timoxley/pkgcount](https://github.com/timoxley/pkgcount)
+* [timoxley/pkgrep](https://github.com/timoxley/pkgrep)
 
 # License
 
