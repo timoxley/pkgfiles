@@ -22,6 +22,11 @@ var argv = minimist(process.argv.slice(2), {
 })
 var dir = argv._[0] || process.cwd()
 
+if (argv.version) {
+  console.info(require('../package.json').version)
+  process.exit()
+}
+
 if (argv.help) {
   usage()
   process.exit(1)
@@ -33,6 +38,7 @@ function usage() {
   console.error('')
   console.error('  pkgfiles                # List all files which would be published in current directory.')
   console.error('  pkgfiles ./mypkg        # List all files which would be published in `./mypkg`.')
+  console.error('  pkgfiles --version      # Show version')
   console.error('  pkgfiles --json         # Render JSON output')
   console.error('  pkgfiles --sort=size    # Sort files by size [default]')
   console.error('  pkgfiles --sort=name    # Sort files by name')
