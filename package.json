@@ -1,6 +1,6 @@
 {
   "name": "pkgfiles",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "description": "List all files which would be published in a package.",
   "main": "index.js",
   "bin": {
