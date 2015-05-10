@@ -158,6 +158,7 @@ pkgFiles.summary = function summary(dir, done) {
   })
 
   duSizes(dir, function(err, dir) {
+    if (err) return fn(err)
     result.diskSizeWithDependencies = dir.diskSize
     result.sizeWithDependencies = dir.size
     if (!--pending) return fn(null, result)
