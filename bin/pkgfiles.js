@@ -74,17 +74,16 @@ pkgFiles.summary(dir, function(err, result) {
     return console.info(JSON.stringify(result, null, 2))
   }
 
-  var total = files.length
   var summary = [
     {
       key: 'total',
       title: 'Number of Files',
-      value: total
+      value: files.length
     },
     {
       key: 'total',
       title: 'Number of Directories',
-      value: total
+      value: dirs.length
     },
     {
       key: 'publishSize',
