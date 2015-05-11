@@ -122,11 +122,14 @@ pkgFiles.summary(dir, function(err, result) {
 
     entry.percent = percent(entry.size/result.publishSize)
     entry.percentDisk = percent(entry.diskSize/result.publishDiskSize)
-    entry.size = bytes(entry.size)
-    entry.diskSize = bytes(entry.diskSize)
     return entry
   })
   .sort(sortBy(argv.sort))
+  .map(function(entry) {
+    //if (typeof entry.size === 'number') entry.size = bytes(entry.size)
+    //if (typeof entry.diskSize === 'number') entry.diskSize = bytes(entry.diskSize)
+    return entry
+  })
 
   var columns = ['name', 'size', 'percent',]
   if (argv.disk) {
@@ -173,6 +176,7 @@ function error(err) {
 
 function sortBy(key) {
   return function(a, b) {
+    console.log(key, typeof a[key], a[key])
     if (typeof a[key] === 'string') {
       return a[key].localeCompare(b[key])
     } else {
