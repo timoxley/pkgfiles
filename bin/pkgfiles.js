@@ -8,18 +8,34 @@ var minimist = require('minimist')
 var columnify = require('columnify')
 var bytes = require('pretty-bytes')
 
+var dirHeader = {
+  name: 'DIR',
+  size: 'SIZE',
+  percent: '%',
+  diskSize: 'DISK SIZE',
+  diskSizePercent: 'DISK SIZE %'
+}
+
+var fileHeader = {
+  name: 'PATH',
+  size: 'SIZE',
+  percent: '%',
+  diskSize: 'DISK SIZE',
+  diskSizePercent: 'DISK SIZE %'
+}
+
 var argv = minimist(process.argv.slice(2), {
   alias: {
     'd': 'dirs',
-    'D': 'only-dirs',
     'f': 'files'
   },
   default: {
-    files: true,
-    dirs: true
+    files: false,
+    dirs: false
   },
   boolean: ['dirs', 'files']
 })
+
 var dir = argv._[0] || process.cwd()
 
 if (argv.version) {
@@ -34,23 +50,25 @@ if (argv.help) {
 
 function usage() {
   console.error('')
-  console.error('Usage: pkgfiles [--sort=size|name|pkgfiles] [--disk] [--json] [dir]')
+  console.error('Usage: pkgfiles [--sort=size|name|pkgfiles] [--disk] [--json] [-f, --only-files | -d, --only-dirs] [dir]')
   console.error('')
-  console.error('  pkgfiles                # List all files which would be published in current directory.')
-  console.error('  pkgfiles ./mypkg        # List all files which would be published in `./mypkg`.')
-  console.error('  pkgfiles --version      # Show version')
-  console.error('  pkgfiles --json         # Render JSON output')
-  console.error('  pkgfiles --sort=size    # Sort files by size [default]')
-  console.error('  pkgfiles --sort=name    # Sort files by name')
-  console.error('  pkgfiles --disk         # Include disk sizes in result')
+  console.error('  pkgfiles                    # List all files which would be published in current directory.')
+  console.error('  pkgfiles ./mypkg            # List all files which would be published in `./mypkg`.')
+  console.error('  pkgfiles --version          # Show version')
+  console.error('  pkgfiles --json             # Render JSON output')
+  console.error('  pkgfiles --sort=size        # Sort files by size [default]')
+  console.error('  pkgfiles --sort=name        # Sort files by name')
+  console.error('  pkgfiles --disk             # Include disk sizes in result')
+  console.error('  pkgfiles -f, --files        # Only list files')
+  console.error('  pkgfiles -d, --dirs         # Only list directories')
   console.error('')
 }
 
 argv.sort = argv.sort || 'size'
 
-if (argv['only-dirs']) {
-  argv.dirs = true
-  argv.files = false
+if (!argv['files'] && !argv['dirs']) {
+  argv.dirs =  true
+  argv.files = true
 }
 
 pkgFiles.summary(dir, function(err, result) {
@@ -66,7 +84,8 @@ pkgFiles.summary(dir, function(err, result) {
   })
 
   if (!argv['dirs']) entries = files
-  if (!argv['files']) entries = dirs
+  else if (!argv['files']) entries = dirs
+  else entries = files.concat(dirs)
 
   entries = result.entries = entries.sort(sortBy(argv.sort))
 
@@ -110,24 +129,24 @@ pkgFiles.summary(dir, function(err, result) {
   entries = entries.map(function(entry) {
     entry.name = path.relative(dir, entry.name)
     if (!entry.exists) {
-      entry.percent = ''
-      entry.percentDisk = ''
-      entry.size = 'N/A'
-      entry.diskSize = ''
+      entry.percent = 0
+      entry.percentDisk = 0
+      entry.size = 0
+      entry.diskSize = 0
       return entry
     }
 
     if (entry.isDirectory) entry.name += '/'
     if (entry.name === '/') entry.name = '.'
 
-    entry.percent = percent(entry.size/result.publishSize)
-    entry.percentDisk = percent(entry.diskSize/result.publishDiskSize)
     return entry
   })
   .sort(sortBy(argv.sort))
   .map(function(entry) {
-    //if (typeof entry.size === 'number') entry.size = bytes(entry.size)
-    //if (typeof entry.diskSize === 'number') entry.diskSize = bytes(entry.diskSize)
+    entry.percent = percent(entry.size/result.publishSize)
+    entry.percentDisk = percent(entry.diskSize/result.publishDiskSize)
+    if (typeof entry.size === 'number') entry.size = bytes(entry.size)
+    if (typeof entry.diskSize === 'number') entry.diskSize = bytes(entry.diskSize)
     return entry
   })
 
@@ -139,24 +158,16 @@ pkgFiles.summary(dir, function(err, result) {
       return !(/Disk/.test(item.key))
     })
   }
-  var breaker = {
-    name: 'DIR',
-    size: 'SIZE',
-    percent: '%',
-    diskSize: 'DISK SIZE',
-    diskSizePercent: 'DISK SIZE %'
-  }
 
-  var rows = files
-  if (argv.dirs) rows = rows.concat({}, breaker).concat(dirs)
+  var fileRows = entries.filter(function(item) {return !item.isDirectory})
+  var dirRows = entries.filter(function(item) {return item.isDirectory})
 
-  console.info(columnify(rows, {columnSplitter: '  ', columns: columns, headingTransform: function(header) {
-    if (header === 'name') return 'PATH'
-    if (header === 'percent') return '%'
-    if (header === 'diskSize') return 'DISK SIZE'
-    if (header === 'percentDisk') return 'DISK SIZE %'
-    return header.toUpperCase()
-  }}))
+  var rows = []
+  if (argv.files) rows = rows.concat(fileHeader, fileRows)
+  if (argv.files && argv.dirs) rows = rows.concat({})
+  if (argv.dirs) rows = rows.concat(dirHeader, dirRows)
+
+  console.info(columnify(rows, {columnSplitter: '  ', columns: columns, showHeaders: false}))
   console.info('\nPKGFILES SUMMARY')
   console.info(columnify(summary, {columnSplitter: '  ', columns: ['title', 'value'], showHeaders: false}))
 })
@@ -176,8 +187,7 @@ function error(err) {
 
 function sortBy(key) {
   return function(a, b) {
-    console.log(key, typeof a[key], a[key])
-    if (typeof a[key] === 'string') {
+    if (typeof b[key] === 'string') {
       return a[key].localeCompare(b[key])
     } else {
       return a[key] - b[key]
