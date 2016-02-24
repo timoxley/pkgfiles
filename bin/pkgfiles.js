@@ -7,6 +7,7 @@ var path = require('path')
 var minimist = require('minimist')
 var columnify = require('columnify')
 var bytes = require('pretty-bytes')
+var map = require('map-limit')
 
 var dirHeader = {
   name: 'DIR',
@@ -36,7 +37,7 @@ var argv = minimist(process.argv.slice(2), {
   boolean: ['dirs', 'files']
 })
 
-var dir = argv._[0] || process.cwd()
+var pkgdirs = argv._.length > 0 ? argv._ : [process.cwd()];
 
 if (argv.version) {
   console.info(require('../package.json').version)
@@ -71,7 +72,16 @@ if (!argv['files'] && !argv['dirs']) {
   argv.files = true
 }
 
-pkgFiles.summary(dir, function(err, result) {
+var total = {
+  files: 0,
+  dirs: 0,
+  publishSize: 0,
+  publishDiskSize: 0,
+  sizeWithDependencies: 0,
+  diskSizeWithDependencies: 0,
+}
+
+map(pkgdirs, Infinity, function(dir, next) { pkgFiles.summary(dir, function(err, result) {
   console.error()
   if (err) return error(err)
 
@@ -79,9 +89,17 @@ pkgFiles.summary(dir, function(err, result) {
   var files = entries.filter(function(e) {
     return !e.isDirectory
   })
+  total.files += files.length;
+
   var dirs = entries.filter(function(e) {
     return e.isDirectory
   })
+  total.dirs += dirs.length;
+
+  total.publishSize += result.publishSize
+  total.publishDiskSize += result.publishDiskSize
+  total.sizeWithDependencies += result.sizeWithDependencies
+  total.diskSizeWithDependencies += result.diskSizeWithDependencies
 
   if (!argv['dirs']) entries = files
   else if (!argv['files']) entries = dirs
@@ -90,7 +108,7 @@ pkgFiles.summary(dir, function(err, result) {
   entries = result.entries = entries.sort(sortBy(argv.sort))
 
   if (argv.json) {
-    return console.info(JSON.stringify(result, null, 2))
+    return next(null, result);
   }
 
   var summary = [
@@ -167,8 +185,59 @@ pkgFiles.summary(dir, function(err, result) {
   if (argv.files && argv.dirs) rows = rows.concat({})
   if (argv.dirs) rows = rows.concat(dirHeader, dirRows)
 
+  if (pkgdirs.length > 1) console.info(dir)
   console.info(columnify(rows, {columnSplitter: '  ', columns: columns, showHeaders: false}))
   console.info('\nPKGFILES SUMMARY')
+  console.info(columnify(summary, {columnSplitter: '  ', columns: ['title', 'value'], showHeaders: false}))
+
+  next()
+}) }, function(err, results) {
+  if (argv.json) {
+    return console.info(JSON.stringify(results.length === 1 ? results[0] : results, null, 2))
+  }
+
+  if (results.length === 1) return
+
+  var summary = [
+    {
+      key: 'total',
+      title: 'Number of Files',
+      value: total.files
+    },
+    {
+      key: 'total',
+      title: 'Number of Directories',
+      value: total.dirs
+    },
+    {
+      key: 'publishSize',
+      title: 'Publishable Size',
+      value: "~" + bytes(total.publishSize)
+    },
+    {
+      key: 'publishDiskSize',
+      title: 'Publishable Size on Disk',
+      value: "~" + bytes(total.publishDiskSize)
+    },
+    {
+      key: 'sizeWithDependencies',
+      title: 'Size with Dependencies',
+      value: "~" + bytes(total.sizeWithDependencies)
+    },
+    {
+      key: 'diskSizeWithDependencies',
+      title: 'Size on Disk with Dependencies',
+      value: "~" + bytes(total.diskSizeWithDependencies)
+    }
+  ].reverse()
+
+  if (!argv.disk) {
+    summary = summary.filter(function(item) {
+      return !(/Disk/.test(item.key))
+    })
+  }
+
+  console.info('\nPKGFILES TOTAL')
   console.info(columnify(summary, {columnSplitter: '  ', columns: ['title', 'value'], showHeaders: false}))
 })
 
