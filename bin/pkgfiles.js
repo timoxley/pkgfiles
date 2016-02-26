@@ -51,10 +51,11 @@ if (argv.help) {
 
 function usage() {
   console.error('')
-  console.error('Usage: pkgfiles [--sort=size|name|pkgfiles] [--disk] [--json] [-f, --only-files | -d, --only-dirs] [dir]')
+  console.error('Usage: pkgfiles [--sort=size|name|pkgfiles] [--disk] [--json] [-f, --only-files | -d, --only-dirs] [dir]...')
   console.error('')
   console.error('  pkgfiles                    # List all files which would be published in current directory.')
   console.error('  pkgfiles ./mypkg            # List all files which would be published in `./mypkg`.')
+  console.error('  pkgfiles ./mypkg ./otherpkg # List all files which would be published in `./mypkg` and `./otherpkg`, and display a summary.')
   console.error('  pkgfiles --version          # Show version')
   console.error('  pkgfiles --json             # Render JSON output')
   console.error('  pkgfiles --sort=size        # Sort files by size [default]')
