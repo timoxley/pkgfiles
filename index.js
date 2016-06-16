@@ -28,7 +28,7 @@ function pkgFiles(dir, fn) {
     .on('package', function(pkg) {
       packages.push(pkg)
     })
-    .on('error', function(entry) {
+    .on('error', function(err) {
       fn(err)
       fn = function() {}
     })
