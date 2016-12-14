@@ -85,6 +85,79 @@ Publishable Size        ~13.8 kB
 Number of Files         11
 ```
 
+```
+> pkgfiles ./pkgfiles ./minimist
+
+./pkgfiles
+PATH                   SIZE      %
+test/pkg/index.js      0 B       0%
+.npmignore             0 B       0%
+test/pkg/lib/index.js  0 B       0%
+.travis.yml            84 B      0%
+test/pkg/package.json  269 B     1%
+test/index.js          690 B     4%
+package.json           926 B     5%
+LICENSE                1.08 kB   6%
+Readme.md              4.35 kB   22%
+index.js               5.35 kB   27%
+bin/pkgfiles.js        6.78 kB   35%
+
+DIR                    SIZE      %
+test/pkg/lib/          0 B       0%
+test/pkg/              269 B     1%
+test/                  959 B     5%
+bin/                   6.78 kB   35%
+./                     19.52 kB  100%
+
+PKGFILES SUMMARY
+Size on Disk with Dependencies  ~3.96 MB
+Size with Dependencies          ~2 MB
+Publishable Size                ~19.52 kB
+Number of Directories           5
+Number of Files                 11
+
+./minimist
+PATH                    SIZE      %
+example/parse.js        69 B      0%
+.travis.yml             116 B     0%
+test/whitespace.js      191 B     1%
+test/parse_modified.js  238 B     1%
+test/stop_early.js      328 B     1%
+test/kv_short.js        376 B     1%
+test/dotted.js          588 B     2%
+test/all_bool.js        756 B     2%
+test/default_bool.js    778 B     3%
+test/long.js            779 B     3%
+package.json            883 B     3%
+test/num.js             909 B     3%
+test/dash.js            980 B     3%
+LICENSE                 1.07 kB   4%
+test/short.js           1.59 kB   5%
+readme.markdown         2.48 kB   8%
+test/unknown.js         2.54 kB   8%
+test/bool.js            3.94 kB   13%
+test/parse.js           4.61 kB   15%
+index.js                7.19 kB   24%
+
+DIR                     SIZE      %
+example/                69 B      0%
+test/                   18.61 kB  61%
+./                      30.41 kB  100%
+
+PKGFILES SUMMARY
+Size on Disk with Dependencies  ~323.58 kB
+Size with Dependencies          ~190.33 kB
+Publishable Size                ~30.41 kB
+Number of Directories           3
+Number of Files                 20
+
+PKGFILES TOTAL
+Size on Disk with Dependencies  ~4.29 MB
+Size with Dependencies          ~2.19 MB
+Publishable Size                ~49.94 kB
+Number of Directories           8
+Number of Files                 31
+```
 ## API
 
 All sizes are in bytes.
